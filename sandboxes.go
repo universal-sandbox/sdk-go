@@ -8,11 +8,8 @@ import (
 	core "github.com/universal-sandbox/sdk-go/core"
 )
 
-type ExecuteRequest struct {
-	// Command or code to execute
-	Command string `json:"command" url:"-"`
-	// Execution timeout in seconds
-	Timeout *int `json:"timeout,omitempty" url:"-"`
+type ListRequest struct {
+	IncludeDeleted *bool `json:"-" url:"include_deleted,omitempty"`
 }
 
 // Response for delete operations.
@@ -78,79 +75,6 @@ func (d *DeleteResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", d)
-}
-
-// Response from command execution.
-type ExecuteResponse struct {
-	Stdout   *string `json:"stdout,omitempty" url:"stdout,omitempty"`
-	Stderr   *string `json:"stderr,omitempty" url:"stderr,omitempty"`
-	ExitCode *int    `json:"exit_code,omitempty" url:"exit_code,omitempty"`
-	Error    *string `json:"error,omitempty" url:"error,omitempty"`
-
-	extraProperties map[string]interface{}
-	_rawJSON        json.RawMessage
-}
-
-func (e *ExecuteResponse) GetStdout() *string {
-	if e == nil {
-		return nil
-	}
-	return e.Stdout
-}
-
-func (e *ExecuteResponse) GetStderr() *string {
-	if e == nil {
-		return nil
-	}
-	return e.Stderr
-}
-
-func (e *ExecuteResponse) GetExitCode() *int {
-	if e == nil {
-		return nil
-	}
-	return e.ExitCode
-}
-
-func (e *ExecuteResponse) GetError() *string {
-	if e == nil {
-		return nil
-	}
-	return e.Error
-}
-
-func (e *ExecuteResponse) GetExtraProperties() map[string]interface{} {
-	return e.extraProperties
-}
-
-func (e *ExecuteResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler ExecuteResponse
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*e = ExecuteResponse(value)
-
-	extraProperties, err := core.ExtractExtraProperties(data, *e)
-	if err != nil {
-		return err
-	}
-	e.extraProperties = extraProperties
-
-	e._rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (e *ExecuteResponse) String() string {
-	if len(e._rawJSON) > 0 {
-		if value, err := core.StringifyJSON(e._rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := core.StringifyJSON(e); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", e)
 }
 
 // Response for listing sandboxes.

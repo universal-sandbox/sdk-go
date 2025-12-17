@@ -87,7 +87,7 @@ func (c *Client) CheckHealth(
 func (c *Client) ListRegions(
 	ctx context.Context,
 	opts ...option.RequestOption,
-) (*sdkgo.RegionsResponse, error) {
+) (interface{}, error) {
 	options := core.NewRequestOptions(opts...)
 
 	baseURL := "https://api.sandbox.ai-infra.org"
@@ -101,7 +101,7 @@ func (c *Client) ListRegions(
 
 	headers := core.MergeHeaders(c.header.Clone(), options.ToHeader())
 
-	var response *sdkgo.RegionsResponse
+	var response interface{}
 	if err := c.caller.Call(
 		ctx,
 		&core.CallParams{

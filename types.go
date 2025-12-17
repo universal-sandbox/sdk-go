@@ -14,8 +14,8 @@ type CreateSandboxRequest struct {
 	Provider *SandboxProvider `json:"provider,omitempty" url:"provider,omitempty"`
 	// Preferred region for the sandbox
 	Region *string `json:"region,omitempty" url:"region,omitempty"`
-	// Custom timeout in minutes
-	TimeoutMinutes *int `json:"timeout_minutes,omitempty" url:"timeout_minutes,omitempty"`
+	// Timeout in minutes
+	Timeout *int `json:"timeout,omitempty" url:"timeout,omitempty"`
 	// Additional metadata
 	Metadata map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
 
@@ -37,11 +37,11 @@ func (c *CreateSandboxRequest) GetRegion() *string {
 	return c.Region
 }
 
-func (c *CreateSandboxRequest) GetTimeoutMinutes() *int {
+func (c *CreateSandboxRequest) GetTimeout() *int {
 	if c == nil {
 		return nil
 	}
-	return c.TimeoutMinutes
+	return c.Timeout
 }
 
 func (c *CreateSandboxRequest) GetMetadata() map[string]interface{} {
@@ -83,6 +83,138 @@ func (c *CreateSandboxRequest) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", c)
+}
+
+// Request to execute a command in a sandbox.
+type ExecuteRequest struct {
+	// Command or code to execute
+	Command string `json:"command" url:"command"`
+	// Execution timeout in seconds
+	Timeout *int `json:"timeout,omitempty" url:"timeout,omitempty"`
+
+	extraProperties map[string]interface{}
+	_rawJSON        json.RawMessage
+}
+
+func (e *ExecuteRequest) GetCommand() string {
+	if e == nil {
+		return ""
+	}
+	return e.Command
+}
+
+func (e *ExecuteRequest) GetTimeout() *int {
+	if e == nil {
+		return nil
+	}
+	return e.Timeout
+}
+
+func (e *ExecuteRequest) GetExtraProperties() map[string]interface{} {
+	return e.extraProperties
+}
+
+func (e *ExecuteRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler ExecuteRequest
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = ExecuteRequest(value)
+
+	extraProperties, err := core.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+
+	e._rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *ExecuteRequest) String() string {
+	if len(e._rawJSON) > 0 {
+		if value, err := core.StringifyJSON(e._rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := core.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+// Response from command execution.
+type ExecuteResponse struct {
+	Stdout   *string `json:"stdout,omitempty" url:"stdout,omitempty"`
+	Stderr   *string `json:"stderr,omitempty" url:"stderr,omitempty"`
+	ExitCode *int    `json:"exit_code,omitempty" url:"exit_code,omitempty"`
+	Error    *string `json:"error,omitempty" url:"error,omitempty"`
+
+	extraProperties map[string]interface{}
+	_rawJSON        json.RawMessage
+}
+
+func (e *ExecuteResponse) GetStdout() *string {
+	if e == nil {
+		return nil
+	}
+	return e.Stdout
+}
+
+func (e *ExecuteResponse) GetStderr() *string {
+	if e == nil {
+		return nil
+	}
+	return e.Stderr
+}
+
+func (e *ExecuteResponse) GetExitCode() *int {
+	if e == nil {
+		return nil
+	}
+	return e.ExitCode
+}
+
+func (e *ExecuteResponse) GetError() *string {
+	if e == nil {
+		return nil
+	}
+	return e.Error
+}
+
+func (e *ExecuteResponse) GetExtraProperties() map[string]interface{} {
+	return e.extraProperties
+}
+
+func (e *ExecuteResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler ExecuteResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = ExecuteResponse(value)
+
+	extraProperties, err := core.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+
+	e._rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *ExecuteResponse) String() string {
+	if len(e._rawJSON) > 0 {
+		if value, err := core.StringifyJSON(e._rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := core.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
 }
 
 type HttpValidationError struct {
@@ -273,55 +405,6 @@ func (l *LimitsResponse) String() string {
 	return fmt.Sprintf("%#v", l)
 }
 
-// Available regions response.
-type RegionsResponse struct {
-	Regions map[string]map[string]interface{} `json:"regions,omitempty" url:"regions,omitempty"`
-
-	extraProperties map[string]interface{}
-	_rawJSON        json.RawMessage
-}
-
-func (r *RegionsResponse) GetRegions() map[string]map[string]interface{} {
-	if r == nil {
-		return nil
-	}
-	return r.Regions
-}
-
-func (r *RegionsResponse) GetExtraProperties() map[string]interface{} {
-	return r.extraProperties
-}
-
-func (r *RegionsResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler RegionsResponse
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*r = RegionsResponse(value)
-
-	extraProperties, err := core.ExtractExtraProperties(data, *r)
-	if err != nil {
-		return err
-	}
-	r.extraProperties = extraProperties
-
-	r._rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (r *RegionsResponse) String() string {
-	if len(r._rawJSON) > 0 {
-		if value, err := core.StringifyJSON(r._rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := core.StringifyJSON(r); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", r)
-}
-
 // Sandbox provider.
 type SandboxProvider string
 
@@ -329,6 +412,7 @@ const (
 	SandboxProviderE2B        SandboxProvider = "e2b"
 	SandboxProviderVolcengine SandboxProvider = "volcengine"
 	SandboxProviderAws        SandboxProvider = "aws"
+	SandboxProviderAlibaba    SandboxProvider = "alibaba"
 )
 
 func NewSandboxProviderFromString(s string) (SandboxProvider, error) {
@@ -339,6 +423,8 @@ func NewSandboxProviderFromString(s string) (SandboxProvider, error) {
 		return SandboxProviderVolcengine, nil
 	case "aws":
 		return SandboxProviderAws, nil
+	case "alibaba":
+		return SandboxProviderAlibaba, nil
 	}
 	var t SandboxProvider
 	return "", fmt.Errorf("%s is not a valid %T", s, t)

@@ -35,8 +35,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 }
 
 // List all sandboxes for the authenticated user.
-func (c *Client) ListSandboxes(
+func (c *Client) List(
 	ctx context.Context,
+	request *sdkgo.ListRequest,
 	opts ...option.RequestOption,
 ) (*sdkgo.SandboxListResponse, error) {
 	options := core.NewRequestOptions(opts...)
@@ -50,7 +51,34 @@ func (c *Client) ListSandboxes(
 	}
 	endpointURL := baseURL + "/sandboxes"
 
+	queryParams, err := core.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+
 	headers := core.MergeHeaders(c.header.Clone(), options.ToHeader())
+
+	errorDecoder := func(statusCode int, body io.Reader) error {
+		raw, err := io.ReadAll(body)
+		if err != nil {
+			return err
+		}
+		apiError := core.NewAPIError(statusCode, errors.New(string(raw)))
+		decoder := json.NewDecoder(bytes.NewReader(raw))
+		switch statusCode {
+		case 422:
+			value := new(sdkgo.UnprocessableEntityError)
+			value.APIError = apiError
+			if err := decoder.Decode(value); err != nil {
+				return apiError
+			}
+			return value
+		}
+		return apiError
+	}
 
 	var response *sdkgo.SandboxListResponse
 	if err := c.caller.Call(
@@ -64,6 +92,7 @@ func (c *Client) ListSandboxes(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Response:        &response,
+			ErrorDecoder:    errorDecoder,
 		},
 	); err != nil {
 		return nil, err
@@ -72,7 +101,7 @@ func (c *Client) ListSandboxes(
 }
 
 // Get a specific sandbox by ID.
-func (c *Client) GetSandbox(
+func (c *Client) Get(
 	ctx context.Context,
 	sandboxId string,
 	opts ...option.RequestOption,
@@ -130,7 +159,7 @@ func (c *Client) GetSandbox(
 }
 
 // Delete a sandbox instance.
-func (c *Client) DeleteSandbox(
+func (c *Client) Delete(
 	ctx context.Context,
 	sandboxId string,
 	opts ...option.RequestOption,

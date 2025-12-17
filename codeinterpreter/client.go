@@ -93,3 +93,64 @@ func (c *Client) Create(
 	}
 	return response, nil
 }
+
+// Execute a command in a code interpreter sandbox.
+func (c *Client) Execute(
+	ctx context.Context,
+	sandboxId string,
+	request *sdkgo.ExecuteRequest,
+	opts ...option.RequestOption,
+) (*sdkgo.ExecuteResponse, error) {
+	options := core.NewRequestOptions(opts...)
+
+	baseURL := "https://api.sandbox.ai-infra.org"
+	if c.baseURL != "" {
+		baseURL = c.baseURL
+	}
+	if options.BaseURL != "" {
+		baseURL = options.BaseURL
+	}
+	endpointURL := core.EncodeURL(baseURL+"/sandboxes/code-interpreter/%v/execute", sandboxId)
+
+	headers := core.MergeHeaders(c.header.Clone(), options.ToHeader())
+	headers.Set("Content-Type", "application/json")
+
+	errorDecoder := func(statusCode int, body io.Reader) error {
+		raw, err := io.ReadAll(body)
+		if err != nil {
+			return err
+		}
+		apiError := core.NewAPIError(statusCode, errors.New(string(raw)))
+		decoder := json.NewDecoder(bytes.NewReader(raw))
+		switch statusCode {
+		case 422:
+			value := new(sdkgo.UnprocessableEntityError)
+			value.APIError = apiError
+			if err := decoder.Decode(value); err != nil {
+				return apiError
+			}
+			return value
+		}
+		return apiError
+	}
+
+	var response *sdkgo.ExecuteResponse
+	if err := c.caller.Call(
+		ctx,
+		&core.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			MaxAttempts:     options.MaxAttempts,
+			Headers:         headers,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    errorDecoder,
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
