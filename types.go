@@ -413,6 +413,7 @@ const (
 	SandboxProviderVolcengine SandboxProvider = "volcengine"
 	SandboxProviderAws        SandboxProvider = "aws"
 	SandboxProviderAlibaba    SandboxProvider = "alibaba"
+	SandboxProviderVercel     SandboxProvider = "vercel"
 )
 
 func NewSandboxProviderFromString(s string) (SandboxProvider, error) {
@@ -425,6 +426,8 @@ func NewSandboxProviderFromString(s string) (SandboxProvider, error) {
 		return SandboxProviderAws, nil
 	case "alibaba":
 		return SandboxProviderAlibaba, nil
+	case "vercel":
+		return SandboxProviderVercel, nil
 	}
 	var t SandboxProvider
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
